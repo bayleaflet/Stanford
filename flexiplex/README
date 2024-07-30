@@ -1,0 +1,28 @@
+# Flexiplex and Fastq Processing Script
+
+This script processes a fastq file by unzipping it, applying flexiplex using a whitelist, and merging the results.
+
+## Prerequisites
+You must ensure that you have your  barcodes.tsv file and your fastq.gz file in your current wd
+Make sure you have the following tools installed:
+- `gzip`
+Note: flexiplex is currently stored in the path listed below. In your run, you may use this path exactly. If this path changes you will have to adjust this
+
+## Usage
+
+To run the script, you need to provide the following arguments in order:
+1. `sample`: The sample name.
+2. `fastqpath: The path to the fastq file.
+3. `barcodes`: The name of the barcodes file.
+
+### Example Command
+
+```bash
+
+nohup nice bash run_flexiplex.sh
+                P8640_22261B
+                /mnt/ix1/Projects_lite/20240603_BC_P8640/scRNA/B01_LongRead
+                barcodes.tsv
+                >out.flexiplex.tmp
+                2>err.flexiplex.tmp
+                &
