@@ -142,10 +142,10 @@ flair_isoform_metrics$AvgTranscriptsPerCellRange <- cut(flair_isoform_metrics$Av
                                                          labels = c("0-1", "1-2", "2-3", "3+"))
 
 # Dot Plot: Avg Transcripts per Cell
-ggplot(flames_isoform_metrics, aes(x = Gene, y = Isoform)) +
+fl1 <- ggplot(flames_isoform_metrics, aes(x = Gene, y = Isoform)) +
   geom_point(aes(size = as.numeric(AvgTranscriptsPerCellRange), color = NumCellsExpressingIsoform)) +
   scale_color_gradient(low = "blue", high = "red") +
-  labs(title = "Average Transcripts per Cell per Isoform", x = "Gene", y = "Isoform", size = "Avg Transcripts/Cell Range", color = "Num. Cells Expressing Isoform") +
+  labs(title = "Flames Average Transcripts per Cell per Isoform", x = "Gene", y = "Isoform", size = "Avg Transcripts/Cell Range", color = "Num. Cells Expressing Isoform") +
   scale_size_continuous(labels = c("0-1", "1-2", "2-3", "3+")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -154,10 +154,10 @@ ggplot(flames_isoform_metrics, aes(x = Gene, y = Isoform)) +
 ggsave("flames_avg_transcripts_per_cell.png", width = 10, height = 8)
 
 # Dot Plot: Avg Transcripts per Cell
-ggplot(custom_isoform_metrics, aes(x = Gene, y = Isoform)) +
+custom1<-ggplot(custom_isoform_metrics, aes(x = Gene, y = Isoform)) +
   geom_point(aes(size = as.numeric(AvgTranscriptsPerCellRange), color = NumCellsExpressingIsoform)) +
   scale_color_gradient(low = "blue", high = "red") +
-  labs(title = "Average Transcripts per Cell per Isoform", x = "Gene", y = "Isoform", size = "Avg Transcripts/Cell Range", color = "Num. Cells Expressing Isoform") +
+  labs(title = "Custom Average Transcripts per Cell per Isoform", x = "Gene", y = "Isoform", size = "Avg Transcripts/Cell Range", color = "Num. Cells Expressing Isoform") +
   scale_size_continuous(labels = c("0-1", "1-2", "2-3", "3+")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -166,16 +166,51 @@ ggplot(custom_isoform_metrics, aes(x = Gene, y = Isoform)) +
 ggsave("custom_avg_transcripts_per_cell.png", width = 10, height = 8)
 
 # Dot Plot: Avg Transcripts per Cell
-ggplot(flair_isoform_metrics, aes(x = Gene, y = Isoform)) +
+flr1<- ggplot(flair_isoform_metrics, aes(x = Gene, y = Isoform)) +
   geom_point(aes(size = as.numeric(AvgTranscriptsPerCellRange), color = NumCellsExpressingIsoform)) +
   scale_color_gradient(low = "blue", high = "red") +
-  labs(title = "Average Transcripts per Cell per Isoform", x = "Gene", y = "Isoform", size = "Avg Transcripts/Cell Range", color = "Num. Cells Expressing Isoform") +
+  labs(title = "Flair Average Transcripts per Cell per Isoform", x = "Gene", y = "Isoform", size = "Avg Transcripts/Cell Range", color = "Num. Cells Expressing Isoform") +
   scale_size_continuous(labels = c("0-1", "1-2", "2-3", "3+")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Save the plot
 ggsave("flair_avg_transcripts_per_cell.png", width = 10, height = 8)
+
+avg_trscr_plot <- fl1 | custom1 | flr1
+ggsave("combined_avg_trsc.pdf", width = 30, height = 15)
+
+
+
+# 3 Dimensional plotting for comparing pipelines --------------------------
+
+library(dplyr)
+library(plotly)
+
+# Merge the datasets
+merged_data <- flames_isoform_metrics %>%
+  inner_join(custom_isoform_metrics, by = c("Gene", "Isoform"), suffix = c("_flames", "_custom")) %>%
+  inner_join(flair_isoform_metrics, by = c("Gene", "Isoform")) %>%
+  rename(AvgTranscriptsPerCell_flair = AvgTranscriptsPerCell, NumCellsExpressingIsoform_flair = NumCellsExpressingIsoform)
+
+# Create a 3D scatter plot
+p <- plot_ly(merged_data,
+             x = ~AvgTranscriptsPerCell_flames,
+             y = ~AvgTranscriptsPerCell_custom,
+             z = ~AvgTranscriptsPerCell_flair,
+             text = ~paste("Gene:", Gene, "<br>Isoform:", Isoform),
+             color = ~NumCellsExpressingIsoform_flames,
+             colors = colorRamp(c("blue", "red")),
+             size = ~NumCellsExpressingIsoform_flames,
+             marker = list(sizemode = 'diameter'),
+             type = 'scatter3d', mode = 'markers') %>%
+  layout(title = "3D Plot: Avg Transcripts per Cell",
+         scene = list(xaxis = list(title = 'FLAMES'),
+                      yaxis = list(title = 'Custom'),
+                      zaxis = list(title = 'FLAIR')))
+
+# Save the plot as an HTML file
+htmlwidgets::saveWidget(p, "3d_avg_transcripts_per_cell.html")
 
 
 ## Unfiltered Isoform Metrics
@@ -395,7 +430,7 @@ flm_lr_plot <- DimPlot(flames_seu,
 
 # Set custom axis limits
 flm_lr_plot <- flm_lr_plot +
-  xlim(-15, 5) +
+  xlim(-15, 7) +
   ylim(-10, 10)
 
 # Custom
@@ -407,7 +442,7 @@ cu_lr_plot <- DimPlot(custom_seu,
 
 # Set custom axis limits
 cu_lr_plot <- cu_lr_plot +
-  xlim(-15, 5) +
+  xlim(-15, 7) +
   ylim(-10, 10)
 
 # Flair
@@ -420,11 +455,60 @@ flr_lr_plot <- DimPlot(flair_seu,
 
 # Set custom axis limits
 flr_lr_plot <- flr_lr_plot +
-  xlim(-15, 5) +
+  xlim(-15, 7) +
   ylim(-10, 10)
 
 merged_plot <- flm_lr_plot | cu_lr_plot | flr_lr_plot
 
-ggsave("Umap_Comparison.pdf", width = 16, height = 8)
+ggsave("Umap_Comparison.pdf", width = 20, height = 8)
 
+
+
+# Compare Subsetted objects -----------------------------------------------
+flames_seu_sub <- LoadSeuratRds("/mnt/ix1/Projects_lite/20240603_BC_P8640/scRNA/C01_Combined/01_flames_analysis/subset.R_out/macrophage.rds")
+custom_seu_sub <- LoadSeuratRds('/mnt/ix1/Projects_lite/20240603_BC_P8640/scRNA/C01_Combined/02_custom_analysis/subset.R_out/macrophage.rds')
+flair_seu_sub <- LoadSeuratRds('/mnt/ix1/Projects_lite/20240603_BC_P8640/scRNA/C01_Combined/03_flair_analysis/macrophage.rds')
+
+
+iso_of_i <- c("SPP1", "APOC1", "NUPR1", "APOE","FN1","CAPG","CD9","TREM2","LGALS3","FTL","IL1B",
+              "GNLY","KRT8","TSPAN31")
+
+flames_all_features <- rownames(GetAssayData(flames_seu_sub, assay = "longread", layer  = "data"))
+custom_all_features <- rownames(GetAssayData(flames_seu_sub, assay = "longread", layer  = "data"))
+flair_all_features <- rownames(GetAssayData(flames_seu_sub, assay = "longread", layer  = "data"))
+
+# Function to match features that start with any of the iso_of_i entries
+get_matching_features <- function(features, iso_of_i) {
+  matching_features <- unique(unlist(sapply(iso_of_i, function(x) {
+    grep(paste0("^", x), features, value = TRUE)
+  })))
+  return(matching_features)
+}
+
+# Get the matching features
+flames_matching_features <- get_matching_features(flames_all_features, iso_of_i)
+custom_matching_features <- get_matching_features(custom_all_features, iso_of_i)
+flair_matching_features <- get_matching_features(flair_all_features, iso_of_i)
+
+# Since matching_features is returning a bunch, let's narrow it down to 4 for now. Can adjust accordingly
+# Limit the number of features to display to 4
+flames_limited_features <- flames_matching_features[1:min(4, length(flames_matching_features))]
+custom_limited_features <- custom_matching_features[1:min(4, length(custom_matching_features))]
+flair_limited_features <- flair_matching_features[1:min(4, length(flair_matching_features))]
+
+DefaultAssay(flames_seu_sub) <- "longread"
+DefaultAssay(custom_seu_sub) <- "longread"
+DefaultAssay(flair_seu_sub) <- "longread"
+
+
+
+# This section isn't returning the properly scaled data. Needs revisiting.
+flames_mac_ioi_feature <- FeaturePlot(flames_seu_sub, features = flames_limited_features)
+custom_mac_ioi_feature <- FeaturePlot(custom_seu_sub, features = custom_limited_features)
+flair_mac_ioi_feature <- FeaturePlot(flair_seu_sub, features = flair_limited_features)
+
+
+
+merged <- flames_mac_ioi_feature | custom_mac_ioi_feature | flair_mac_ioi_feature
+ggsave("spp1_Comparison.pdf", plot=merged, width = 20, height = 10)
 
