@@ -6,7 +6,7 @@ This script processes a fastq file by unzipping it, applying flexiplex using a w
 You must ensure that you have your  barcodes.tsv file and your fastq.gz file in your current wd
 Make sure you have the following tools installed:
 - `gzip`
-Note: flexiplex is currently stored in the path listed below. In your run, you may use this path exactly. If this path changes you will have to adjust this
+Note: flexiplex path will be dependent upon your computer
 
 ## Usage
 
